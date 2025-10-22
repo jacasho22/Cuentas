@@ -1,0 +1,474 @@
+/* Reset y configuración base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header */
+header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: white;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* Secciones */
+section {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+section:hover {
+    transform: translateY(-2px);
+}
+
+section h2 {
+    color: #4a5568;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 10px;
+}
+
+/* Grupos de entrada */
+.input-group {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.input-group input,
+.input-group select {
+    flex: 1;
+    min-width: 200px;
+    padding: 12px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Botones */
+.btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    color: white;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #f56565, #e53e3e);
+    color: white;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ed8936, #dd6b20);
+    color: white;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #4299e1, #3182ce);
+    color: white;
+}
+
+/* Tarjetas de presupuesto */
+.budget-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.budget-card {
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.budget-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+    pointer-events: none;
+}
+
+.budget-card.fixed {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.budget-card.variable {
+    background: linear-gradient(135deg, #f093fb, #f5576c);
+}
+
+.budget-card.savings {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+}
+
+.budget-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    opacity: 0.9;
+}
+
+.budget-card .amount {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.budget-card .remaining {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* Filtros de transacciones */
+.transaction-filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.filter-btn.active,
+.filter-btn:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+/* Lista de transacciones */
+.transactions-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.transaction-item:hover {
+    background: #f7fafc;
+    transform: translateX(5px);
+}
+
+.transaction-info {
+    flex: 1;
+}
+
+.transaction-type {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.transaction-description {
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+.transaction-amount {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.transaction-amount.income {
+    color: #48bb78;
+}
+
+.transaction-amount.expense {
+    color: #f56565;
+}
+
+.transaction-date {
+    font-size: 0.8rem;
+    color: #a0aec0;
+    margin-left: 15px;
+}
+
+.delete-btn {
+    background: #fed7d7;
+    color: #c53030;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+}
+
+.delete-btn:hover {
+    background: #feb2b2;
+    transform: scale(1.1);
+}
+
+/* Sección de acciones */
+.actions-section {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Mensaje vacío */
+.empty-message {
+    text-align: center;
+    color: #a0aec0;
+    font-style: italic;
+    padding: 40px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+    
+    header h1 {
+        font-size: 2rem;
+    }
+    
+    .input-group {
+        flex-direction: column;
+    }
+    
+    .input-group input,
+    .input-group select,
+    .btn {
+        width: 100%;
+        min-width: unset;
+    }
+    
+    .budget-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .transaction-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .transaction-amount,
+    .transaction-date {
+        margin-left: 0;
+    }
+    
+    .actions-section {
+        flex-direction: column;
+    }
+}
+
+/* Animaciones */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.transaction-item {
+    animation: slideIn 0.3s ease;
+}
+
+/* Scrollbar personalizada */
+.transactions-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.transactions-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.transactions-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.transactions-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Barra de cuenta (header) */
+.account-bar {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(255,255,255,0.12);
+  padding: 10px 12px;
+  border-radius: 10px;
+  backdrop-filter: blur(4px);
+}
+
+.account-bar #current-user-label {
+  font-weight: 700;
+}
+
+.account-buttons .btn {
+  padding: 8px 12px;
+  font-size: 0.9rem;
+}
+
+/* Modal de autenticación */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal.hidden { display: none; }
+
+.modal-content {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.modal-content h3 {
+  margin-bottom: 12px;
+  color: #4a5568;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.tab-btn.active,
+.tab-btn:hover {
+  background: #667eea;
+  color: #ffffff;
+  border-color: #667eea;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.form.hidden { display: none; }
+
+.form input {
+  padding: 10px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.form input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+#auth-close {
+  width: 100%;
+  margin-top: 10px;
+  background: #edf2f7;
+  color: #2d3748;
+}
+
+#auth-close:hover { background: #e2e8f0; }
