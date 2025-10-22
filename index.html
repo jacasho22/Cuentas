@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Gastos Mensuales</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-wallet"></i> Control de Gastos Mensuales</h1>
+            <p>Gestiona tus ingresos y gastos con división automática</p>
+        <div class="account-bar">
+            <span id="current-user-label">Invitado</span>
+            <div class="account-buttons">
+                <button id="btn-login" class="btn btn-info"><i class="fas fa-user"></i> Iniciar sesión</button>
+                <button id="btn-register" class="btn btn-success"><i class="fas fa-user-plus"></i> Registrarse</button>
+                <button id="btn-logout" class="btn btn-warning" style="display:none;"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            </div>
+        </div>
+        </header>
+
+        <main>
+            <!-- Sección de Ingresos -->
+            <section class="income-section">
+                <h2><i class="fas fa-plus-circle"></i> Ingresos</h2>
+                <div class="input-group">
+                    <input type="number" id="income-amount" placeholder="Cantidad de ingreso" step="0.01">
+                    <input type="text" id="income-description" placeholder="Descripción del ingreso">
+                    <button id="add-income" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Agregar Ingreso
+                    </button>
+                </div>
+            </section>
+
+            <!-- Resumen de División Automática -->
+            <section class="budget-summary">
+                <h2><i class="fas fa-chart-pie"></i> División Automática</h2>
+                <div class="budget-cards">
+                    <div class="budget-card fixed">
+                        <h3>Gastos Fijos (50%)</h3>
+                        <div class="amount" id="fixed-budget">€0.00</div>
+                        <div class="remaining">Disponible: <span id="fixed-remaining">€0.00</span></div>
+                    </div>
+                    <div class="budget-card variable">
+                        <h3>Gastos Variables (30%)</h3>
+                        <div class="amount" id="variable-budget">€0.00</div>
+                        <div class="remaining">Disponible: <span id="variable-remaining">€0.00</span></div>
+                    </div>
+                    <div class="budget-card savings">
+                        <h3>Ahorros (20%)</h3>
+                        <div class="amount" id="savings-budget">€0.00</div>
+                        <div class="remaining">Ahorrado: <span id="savings-amount">€0.00</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección de Gastos -->
+            <section class="expenses-section">
+                <h2><i class="fas fa-minus-circle"></i> Gastos</h2>
+                <div class="input-group">
+                    <select id="expense-category">
+                        <option value="fixed">Gastos Fijos</option>
+                        <option value="variable">Gastos Variables</option>
+                    </select>
+                    <input type="number" id="expense-amount" placeholder="Cantidad del gasto" step="0.01">
+                    <input type="text" id="expense-description" placeholder="Descripción del gasto">
+                    <button id="add-expense" class="btn btn-danger">
+                        <i class="fas fa-minus"></i> Agregar Gasto
+                    </button>
+                </div>
+            </section>
+
+            <!-- Historial de Transacciones -->
+            <section class="transactions-section">
+                <h2><i class="fas fa-history"></i> Historial de Transacciones</h2>
+                <div class="transaction-filters">
+                    <button class="filter-btn active" data-filter="all">Todas</button>
+                    <button class="filter-btn" data-filter="income">Ingresos</button>
+                    <button class="filter-btn" data-filter="fixed">Gastos Fijos</button>
+                    <button class="filter-btn" data-filter="variable">Gastos Variables</button>
+                </div>
+                <div id="transactions-list" class="transactions-list">
+                    <!-- Las transacciones se mostrarán aquí dinámicamente -->
+                </div>
+            </section>
+
+            <!-- Botones de Acción -->
+            <section class="actions-section">
+                <button id="clear-month" class="btn btn-warning">
+                    <i class="fas fa-refresh"></i> Nuevo Mes
+                </button>
+                <button id="export-data" class="btn btn-info">
+                    <i class="fas fa-download"></i> Exportar Datos
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal de Autenticación -->
+    <div id="auth-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="auth-title">Iniciar sesión</h3>
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="login">Iniciar sesión</button>
+                <button class="tab-btn" data-tab="register">Registrarse</button>
+            </div>
+
+            <form id="login-form" class="form">
+                <input type="text" id="login-username" placeholder="Usuario">
+                <input type="password" id="login-password" placeholder="Contraseña">
+                <button type="submit" class="btn btn-info">Entrar</button>
+            </form>
+
+            <form id="register-form" class="form hidden">
+                <input type="text" id="register-username" placeholder="Usuario">
+                <input type="password" id="register-password" placeholder="Contraseña">
+                <button type="submit" class="btn btn-success">Crear cuenta</button>
+            </form>
+
+            <button id="auth-close" class="btn">Cerrar</button>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="analytics.js"></script>
+    <script src="auth.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
