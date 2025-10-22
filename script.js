@@ -45,8 +45,8 @@ class ExpenseTracker {
         this.setupEventListeners();
 
         // React a cambios de autenticación
-        window.addEventListener('auth:login', () => {
-            this.loadData();
+        window.addEventListener('auth:login', async () => {
+            await this.loadData();
             this.updateDisplay();
         });
         window.addEventListener('auth:logout', () => {
@@ -364,20 +364,81 @@ class ExpenseTracker {
         window.analytics?.track('data_exported', { count: this.transactions.length });
     }
 
-    saveData() {
-        const data = {
+    async saveData() {
+        const payload = {
             transactions: this.transactions,
             totalIncome: this.totalIncome,
             fixedExpenses: this.fixedExpenses,
             variableExpenses: this.variableExpenses
         };
-        const user = window.auth?.getCurrentUser();
-        if (!user) return; // No guardar si no hay usuario
-        const key = `expenseTrackerData:${user}`;
-        localStorage.setItem(key, JSON.stringify(data));
+
+        const cfg = window.APP_CONFIG || {};
+        const clientReady = !!window.supabase && !!cfg.SUPABASE_URL && !!cfg.SUPABASE_ANON_KEY;
+        if (clientReady) {
+            try {
+                const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+                const { data: userData } = await client.auth.getUser();
+                const user = userData?.user;
+                if (user?.id) {
+                    await client
+                        .from('expense_data')
+                        .upsert({ user_id: user.id, data: payload }, { onConflict: 'user_id' });
+                    return;
+                }
+            } catch (e) {
+                console.warn('saveData supabase error:', e);
+            }
+        }
+
+        // Fallback localStorage
+        const userLabel = window.auth?.getCurrentUser();
+        if (!userLabel) return; // No guardar si no hay usuario
+        const key = `expenseTrackerData:${userLabel}`;
+        localStorage.setItem(key, JSON.stringify(payload));
     }
 
-    loadData() {
+    async loadData() {
+        const cfg = window.APP_CONFIG || {};
+        const clientReady = !!window.supabase && !!cfg.SUPABASE_URL && !!cfg.SUPABASE_ANON_KEY;
+        if (clientReady) {
+            try {
+                const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+                const { data: userData } = await client.auth.getUser();
+                const user = userData?.user;
+                if (!user?.id) {
+                    this.transactions = [];
+                    this.totalIncome = 0;
+                    this.fixedExpenses = 0;
+                    this.variableExpenses = 0;
+                    return;
+                }
+                const { data, error } = await client
+                    .from('expense_data')
+                    .select('data')
+                    .eq('user_id', user.id)
+                    .single();
+                if (error && error.code !== 'PGRST116') {
+                    console.warn('loadData supabase error:', error);
+                }
+                const payload = data?.data || null;
+                if (payload) {
+                    this.transactions = payload.transactions || [];
+                    this.totalIncome = payload.totalIncome || 0;
+                    this.fixedExpenses = payload.fixedExpenses || 0;
+                    this.variableExpenses = payload.variableExpenses || 0;
+                } else {
+                    this.transactions = [];
+                    this.totalIncome = 0;
+                    this.fixedExpenses = 0;
+                    this.variableExpenses = 0;
+                }
+                return;
+            } catch (e) {
+                console.warn('loadData supabase error:', e);
+                // fallback a local
+            }
+        }
+
         const user = window.auth?.getCurrentUser();
         if (!user) {
             this.transactions = [];

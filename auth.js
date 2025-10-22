@@ -93,32 +93,75 @@
       }
     }
 
-    async register(username, password){
+    async register(email, password){
+      const cfg = window.APP_CONFIG || {};
+      if (cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY && window.supabase) {
+        try {
+          const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+          const { error } = await client.auth.signUp({
+            email,
+            password,
+            options: { data: { username: email } },
+          });
+          if (error) { console.warn(error); return false; }
+          window.analytics?.track('user_registered', { username: email });
+          return true;
+        } catch (e) {
+          console.warn('Supabase signUp error:', e);
+        }
+      }
+      // Fallback local
       const users = this._getUsers();
-      if(users.find(u => u.username.toLowerCase() === username.toLowerCase())){
+      if(users.find(u => u.username.toLowerCase() === email.toLowerCase())){
         return false;
       }
       const hash = await this._hash(password);
-      users.push({ username, hash });
+      users.push({ username: email, hash });
       localStorage.setItem('users', JSON.stringify(users));
-      window.analytics?.track('user_registered', { username });
+      window.analytics?.track('user_registered', { username: email });
       return true;
     }
 
-    async login(username, password){
+    async login(email, password){
+      const cfg = window.APP_CONFIG || {};
+      if (cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY && window.supabase) {
+        try {
+          const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+          const { data, error } = await client.auth.signInWithPassword({ email, password });
+          if (error) { console.warn(error); return false; }
+          const label = email;
+          localStorage.setItem('currentUser', label);
+          this._updateHeader();
+          window.dispatchEvent(new CustomEvent('auth:login', { detail: { username: label } }));
+          window.analytics?.track('user_logged_in', { username: label });
+          return true;
+        } catch (e) {
+          console.warn('Supabase signIn error:', e);
+        }
+      }
+      // Fallback local
       const users = this._getUsers();
-      const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+      const user = users.find(u => u.username.toLowerCase() === email.toLowerCase());
       if(!user) return false;
       const hash = await this._hash(password);
       if(hash !== user.hash) return false;
-      localStorage.setItem('currentUser', username);
+      localStorage.setItem('currentUser', email);
       this._updateHeader();
-      window.dispatchEvent(new CustomEvent('auth:login', { detail: { username } }));
-      window.analytics?.track('user_logged_in', { username });
+      window.dispatchEvent(new CustomEvent('auth:login', { detail: { username: email } }));
+      window.analytics?.track('user_logged_in', { username: email });
       return true;
     }
 
-    logout(){
+    async logout(){
+      const cfg = window.APP_CONFIG || {};
+      if (cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY && window.supabase) {
+        try {
+          const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+          await client.auth.signOut();
+        } catch (e) {
+          console.warn('Supabase signOut error:', e);
+        }
+      }
       const username = this.getCurrentUser();
       localStorage.removeItem('currentUser');
       this._updateHeader();

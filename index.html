@@ -6,6 +6,7 @@
     <title>Control de Gastos Mensuales</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
@@ -109,13 +110,13 @@
             </div>
 
             <form id="login-form" class="form">
-                <input type="text" id="login-username" placeholder="Usuario">
+                <input type="text" id="login-username" placeholder="Email">
                 <input type="password" id="login-password" placeholder="Contraseña">
                 <button type="submit" class="btn btn-info">Entrar</button>
             </form>
 
             <form id="register-form" class="form hidden">
-                <input type="text" id="register-username" placeholder="Usuario">
+                <input type="text" id="register-username" placeholder="Email">
                 <input type="password" id="register-password" placeholder="Contraseña">
                 <button type="submit" class="btn btn-success">Crear cuenta</button>
             </form>
