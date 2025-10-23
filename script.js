@@ -45,8 +45,8 @@ class ExpenseTracker {
         this.setupEventListeners();
 
         // React a cambios de autenticación
-        window.addEventListener('auth:login', () => {
-            this.loadData();
+        window.addEventListener('auth:login', async () => {
+            await this.loadData();
             this.updateDisplay();
         });
         window.addEventListener('auth:logout', () => {
@@ -81,7 +81,7 @@ class ExpenseTracker {
         this.elements.exportDataBtn.addEventListener('click', () => this.exportData());
     }
 
-    addIncome() {
+    async addIncome() {
         if (!this.ensureAuth()) return;
         const amount = parseFloat(this.elements.incomeAmount.value);
         const description = this.elements.incomeDescription.value.trim();
@@ -108,6 +108,29 @@ class ExpenseTracker {
         this.transactions.push(transaction);
         this.totalIncome += amount;
 
+        // Guardar en Supabase si está disponible
+        const cfg = window.APP_CONFIG || {};
+        if (window.supabase && cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY) {
+            try {
+                const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+                const { data: userData } = await client.auth.getUser();
+                const user = userData?.user;
+                if (user?.id) {
+                    await client.from('transactions').insert({
+                        id: transaction.id,
+                        user_id: user.id,
+                        type: transaction.type,
+                        category: transaction.category,
+                        amount: transaction.amount,
+                        description: transaction.description,
+                        date: transaction.date
+                    });
+                }
+            } catch (e) {
+                console.warn('Supabase insert income error:', e);
+            }
+        }
+
         // Limpiar campos
         this.elements.incomeAmount.value = '';
         this.elements.incomeDescription.value = '';
@@ -118,7 +141,7 @@ class ExpenseTracker {
         window.analytics?.track('income_added', { amount, description });
     }
 
-    addExpense() {
+    async addExpense() {
         if (!this.ensureAuth()) return;
         const category = this.elements.expenseCategory.value;
         const amount = parseFloat(this.elements.expenseAmount.value);
@@ -156,6 +179,29 @@ class ExpenseTracker {
             this.fixedExpenses += amount;
         } else {
             this.variableExpenses += amount;
+        }
+
+        // Guardar en Supabase si está disponible
+        const cfg = window.APP_CONFIG || {};
+        if (window.supabase && cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY) {
+            try {
+                const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+                const { data: userData } = await client.auth.getUser();
+                const user = userData?.user;
+                if (user?.id) {
+                    await client.from('transactions').insert({
+                        id: transaction.id,
+                        user_id: user.id,
+                        type: transaction.type,
+                        category: transaction.category,
+                        amount: transaction.amount,
+                        description: transaction.description,
+                        date: transaction.date
+                    });
+                }
+            } catch (e) {
+                console.warn('Supabase insert expense error:', e);
+            }
         }
 
         // Limpiar campos
@@ -294,13 +340,31 @@ class ExpenseTracker {
         window.analytics?.track('filter_changed', { filter });
     }
 
-    deleteTransaction(id) {
+    async deleteTransaction(id) {
         const transaction = this.transactions.find(t => t.id === id);
         if (!transaction) return;
 
         // Confirmar eliminación
         if (!confirm('¿Estás seguro de que quieres eliminar esta transacción?')) {
             return;
+        }
+
+        // Eliminar en Supabase si está disponible
+        const cfg = window.APP_CONFIG || {};
+        if (window.supabase && cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY) {
+            try {
+                const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+                const { data: userData } = await client.auth.getUser();
+                const user = userData?.user;
+                if (user?.id) {
+                    await client.from('transactions')
+                        .delete()
+                        .eq('user_id', user.id)
+                        .eq('id', id);
+                }
+            } catch (e) {
+                console.warn('Supabase delete transaction error:', e);
+            }
         }
 
         // Actualizar totales
@@ -321,9 +385,26 @@ class ExpenseTracker {
         window.analytics?.track('transaction_deleted', { id, type: transaction.type, category: transaction.category, amount: transaction.amount });
     }
 
-    clearMonth() {
+    async clearMonth() {
         if (!confirm('¿Estás seguro de que quieres iniciar un nuevo mes? Esto eliminará todas las transacciones.')) {
             return;
+        }
+
+        // Eliminar todas las transacciones del usuario en Supabase si está disponible
+        const cfg = window.APP_CONFIG || {};
+        if (window.supabase && cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY) {
+            try {
+                const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+                const { data: userData } = await client.auth.getUser();
+                const user = userData?.user;
+                if (user?.id) {
+                    await client.from('transactions')
+                        .delete()
+                        .eq('user_id', user.id);
+                }
+            } catch (e) {
+                console.warn('Supabase clearMonth error:', e);
+            }
         }
 
         this.transactions = [];
@@ -364,20 +445,87 @@ class ExpenseTracker {
         window.analytics?.track('data_exported', { count: this.transactions.length });
     }
 
-    saveData() {
-        const data = {
+    async saveData() {
+        const payload = {
             transactions: this.transactions,
             totalIncome: this.totalIncome,
             fixedExpenses: this.fixedExpenses,
             variableExpenses: this.variableExpenses
         };
-        const user = window.auth?.getCurrentUser();
-        if (!user) return; // No guardar si no hay usuario
-        const key = `expenseTrackerData:${user}`;
-        localStorage.setItem(key, JSON.stringify(data));
+
+        const cfg = window.APP_CONFIG || {};
+        const clientReady = !!window.supabase && !!cfg.SUPABASE_URL && !!cfg.SUPABASE_ANON_KEY;
+        if (clientReady) {
+            try {
+                const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+                const { data: userData } = await client.auth.getUser();
+                const user = userData?.user;
+                if (user?.id) {
+                    await client
+                        .from('expense_data')
+                        .upsert({ user_id: user.id, data: payload }, { onConflict: 'user_id' });
+                    return;
+                }
+            } catch (e) {
+                console.warn('saveData supabase error:', e);
+            }
+        }
+
+        // Fallback localStorage
+        const userLabel = window.auth?.getCurrentUser();
+        if (!userLabel) return; // No guardar si no hay usuario
+        const key = `expenseTrackerData:${userLabel}`;
+        localStorage.setItem(key, JSON.stringify(payload));
     }
 
-    loadData() {
+    async loadData() {
+        const cfg = window.APP_CONFIG || {};
+        const clientReady = !!window.supabase && !!cfg.SUPABASE_URL && !!cfg.SUPABASE_ANON_KEY;
+        if (clientReady) {
+            try {
+                const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+                const { data: userData } = await client.auth.getUser();
+                const user = userData?.user;
+                if (!user?.id) {
+                    this.transactions = [];
+                    this.totalIncome = 0;
+                    this.fixedExpenses = 0;
+                    this.variableExpenses = 0;
+                    return;
+                }
+                const { data, error } = await client
+                    .from('transactions')
+                    .select('id,type,category,amount,description,date')
+                    .eq('user_id', user.id);
+                if (error) {
+                    console.warn('loadData supabase transactions error:', error);
+                }
+                const rows = Array.isArray(data) ? data : [];
+                this.transactions = rows.map(r => ({
+                    id: r.id,
+                    type: r.type,
+                    category: r.category,
+                    amount: Number(r.amount),
+                    description: r.description || '',
+                    date: r.date
+                }));
+                // Recalcular totales a partir de transacciones
+                this.totalIncome = this.transactions
+                    .filter(t => t.type === 'income')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                this.fixedExpenses = this.transactions
+                    .filter(t => t.type === 'expense' && t.category === 'fixed')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                this.variableExpenses = this.transactions
+                    .filter(t => t.type === 'expense' && t.category === 'variable')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                return;
+            } catch (e) {
+                console.warn('loadData supabase error:', e);
+                // fallback a local
+            }
+        }
+
         const user = window.auth?.getCurrentUser();
         if (!user) {
             this.transactions = [];
