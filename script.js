@@ -494,25 +494,31 @@ class ExpenseTracker {
                     return;
                 }
                 const { data, error } = await client
-                    .from('expense_data')
-                    .select('data')
-                    .eq('user_id', user.id)
-                    .single();
-                if (error && error.code !== 'PGRST116') {
-                    console.warn('loadData supabase error:', error);
+                    .from('transactions')
+                    .select('id,type,category,amount,description,date')
+                    .eq('user_id', user.id);
+                if (error) {
+                    console.warn('loadData supabase transactions error:', error);
                 }
-                const payload = data?.data || null;
-                if (payload) {
-                    this.transactions = payload.transactions || [];
-                    this.totalIncome = payload.totalIncome || 0;
-                    this.fixedExpenses = payload.fixedExpenses || 0;
-                    this.variableExpenses = payload.variableExpenses || 0;
-                } else {
-                    this.transactions = [];
-                    this.totalIncome = 0;
-                    this.fixedExpenses = 0;
-                    this.variableExpenses = 0;
-                }
+                const rows = Array.isArray(data) ? data : [];
+                this.transactions = rows.map(r => ({
+                    id: r.id,
+                    type: r.type,
+                    category: r.category,
+                    amount: Number(r.amount),
+                    description: r.description || '',
+                    date: r.date
+                }));
+                // Recalcular totales a partir de transacciones
+                this.totalIncome = this.transactions
+                    .filter(t => t.type === 'income')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                this.fixedExpenses = this.transactions
+                    .filter(t => t.type === 'expense' && t.category === 'fixed')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                this.variableExpenses = this.transactions
+                    .filter(t => t.type === 'expense' && t.category === 'variable')
+                    .reduce((sum, t) => sum + t.amount, 0);
                 return;
             } catch (e) {
                 console.warn('loadData supabase error:', e);

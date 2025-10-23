@@ -129,6 +129,21 @@
           const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
           const { data, error } = await client.auth.signInWithPassword({ email, password });
           if (error) { console.warn(error); return false; }
+
+          // Registrar/actualizar perfil del usuario en la BD
+          try {
+            const { data: userData } = await client.auth.getUser();
+            const authedUser = userData?.user;
+            if (authedUser?.id) {
+              await client.from('profiles').upsert({
+                user_id: authedUser.id,
+                email: email,
+              }, { onConflict: 'user_id' });
+            }
+          } catch (e) {
+            console.warn('Supabase upsert profile error:', e);
+          }
+
           const label = email;
           localStorage.setItem('currentUser', label);
           this._updateHeader();
