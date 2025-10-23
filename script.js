@@ -81,7 +81,7 @@ class ExpenseTracker {
         this.elements.exportDataBtn.addEventListener('click', () => this.exportData());
     }
 
-    addIncome() {
+    async addIncome() {
         if (!this.ensureAuth()) return;
         const amount = parseFloat(this.elements.incomeAmount.value);
         const description = this.elements.incomeDescription.value.trim();
@@ -108,6 +108,29 @@ class ExpenseTracker {
         this.transactions.push(transaction);
         this.totalIncome += amount;
 
+        // Guardar en Supabase si está disponible
+        const cfg = window.APP_CONFIG || {};
+        if (window.supabase && cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY) {
+            try {
+                const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+                const { data: userData } = await client.auth.getUser();
+                const user = userData?.user;
+                if (user?.id) {
+                    await client.from('transactions').insert({
+                        id: transaction.id,
+                        user_id: user.id,
+                        type: transaction.type,
+                        category: transaction.category,
+                        amount: transaction.amount,
+                        description: transaction.description,
+                        date: transaction.date
+                    });
+                }
+            } catch (e) {
+                console.warn('Supabase insert income error:', e);
+            }
+        }
+
         // Limpiar campos
         this.elements.incomeAmount.value = '';
         this.elements.incomeDescription.value = '';
@@ -118,7 +141,7 @@ class ExpenseTracker {
         window.analytics?.track('income_added', { amount, description });
     }
 
-    addExpense() {
+    async addExpense() {
         if (!this.ensureAuth()) return;
         const category = this.elements.expenseCategory.value;
         const amount = parseFloat(this.elements.expenseAmount.value);
@@ -156,6 +179,29 @@ class ExpenseTracker {
             this.fixedExpenses += amount;
         } else {
             this.variableExpenses += amount;
+        }
+
+        // Guardar en Supabase si está disponible
+        const cfg = window.APP_CONFIG || {};
+        if (window.supabase && cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY) {
+            try {
+                const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+                const { data: userData } = await client.auth.getUser();
+                const user = userData?.user;
+                if (user?.id) {
+                    await client.from('transactions').insert({
+                        id: transaction.id,
+                        user_id: user.id,
+                        type: transaction.type,
+                        category: transaction.category,
+                        amount: transaction.amount,
+                        description: transaction.description,
+                        date: transaction.date
+                    });
+                }
+            } catch (e) {
+                console.warn('Supabase insert expense error:', e);
+            }
         }
 
         // Limpiar campos
@@ -294,13 +340,31 @@ class ExpenseTracker {
         window.analytics?.track('filter_changed', { filter });
     }
 
-    deleteTransaction(id) {
+    async deleteTransaction(id) {
         const transaction = this.transactions.find(t => t.id === id);
         if (!transaction) return;
 
         // Confirmar eliminación
         if (!confirm('¿Estás seguro de que quieres eliminar esta transacción?')) {
             return;
+        }
+
+        // Eliminar en Supabase si está disponible
+        const cfg = window.APP_CONFIG || {};
+        if (window.supabase && cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY) {
+            try {
+                const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+                const { data: userData } = await client.auth.getUser();
+                const user = userData?.user;
+                if (user?.id) {
+                    await client.from('transactions')
+                        .delete()
+                        .eq('user_id', user.id)
+                        .eq('id', id);
+                }
+            } catch (e) {
+                console.warn('Supabase delete transaction error:', e);
+            }
         }
 
         // Actualizar totales
@@ -321,9 +385,26 @@ class ExpenseTracker {
         window.analytics?.track('transaction_deleted', { id, type: transaction.type, category: transaction.category, amount: transaction.amount });
     }
 
-    clearMonth() {
+    async clearMonth() {
         if (!confirm('¿Estás seguro de que quieres iniciar un nuevo mes? Esto eliminará todas las transacciones.')) {
             return;
+        }
+
+        // Eliminar todas las transacciones del usuario en Supabase si está disponible
+        const cfg = window.APP_CONFIG || {};
+        if (window.supabase && cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY) {
+            try {
+                const client = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+                const { data: userData } = await client.auth.getUser();
+                const user = userData?.user;
+                if (user?.id) {
+                    await client.from('transactions')
+                        .delete()
+                        .eq('user_id', user.id);
+                }
+            } catch (e) {
+                console.warn('Supabase clearMonth error:', e);
+            }
         }
 
         this.transactions = [];
